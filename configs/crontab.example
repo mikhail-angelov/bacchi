@@ -1,0 +1,2 @@
+# Daily backup at midnight
+0 0 * * * /usr/local/bin/backup-service backup --config=/etc/backup-service/config.yaml >> /var/log/backup-service.log 2>&1

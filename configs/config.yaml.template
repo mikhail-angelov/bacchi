@@ -1,0 +1,36 @@
+s3:
+  bucket: "my-backup-bucket"
+  region: "us-east-1"
+  endpoint: "" # Optional: for S3-compatible storage
+  access_key_id: "YOUR_ACCESS_KEY"
+  secret_access_key: "YOUR_SECRET_KEY"
+  prefix: "server-backups/"
+
+backups:
+  - name: "home-configs"
+    folders:
+      - "/home/user/.config"
+      - "/home/user/.ssh"
+    exclude:
+      - "*.tmp"
+      - "cache/*"
+  - name: "web-app"
+    folders:
+      - "/var/www/html"
+    exclude:
+      - "node_modules"
+
+encryption:
+  enabled: true
+  passphrase: "YOUR_SECRET_PASSPHRASE"
+
+retention:
+  daily: 10
+  monthly: 1
+
+telegram:
+  enabled: true
+  bot_token: "YOUR_BOT_TOKEN"
+  chat_id: "YOUR_CHAT_ID"
+
+schedule: "0 0 * * *" # Daily at midnight
