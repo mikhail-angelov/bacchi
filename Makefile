@@ -1,6 +1,6 @@
+include .env
+
 BINARY_NAME=backup-service
-SSH_USER=root
-SSH_HOST=your-server-ip
 INSTALL_DIR=/usr/local/bin
 CONFIG_DIR=/etc/backup-service
 
