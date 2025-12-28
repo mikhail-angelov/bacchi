@@ -19,7 +19,7 @@ func NewEngine(tempDir string) *Engine {
 }
 
 // CreateArchive creates a tar.gz archive of the specified folders, supporting incremental backups with GNU tar.
-func (e *Engine) CreateArchive(name string, folders []string, exclude []string, snapshotFile string) (string, error) {
+func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotFile string) (string, error) {
 	timestamp := time.Now().Format("20060102150405")
 	archiveName := fmt.Sprintf("%s_%s.tar.gz", name, timestamp)
 	archivePath := filepath.Join(e.TempDir, archiveName)
@@ -45,7 +45,7 @@ func (e *Engine) CreateArchive(name string, folders []string, exclude []string, 
 }
 
 // Encrypt encrypts a file using GPG symmetric encryption with a passphrase.
-func (e *Engine) Encrypt(filePath string, passphrase string) (string, error) {
+func (e *Engine) Encrypt(filePath, passphrase string) (string, error) {
 	encryptedPath := filePath + ".gpg"
 	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--symmetric", "--output", encryptedPath, filePath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -55,7 +55,7 @@ func (e *Engine) Encrypt(filePath string, passphrase string) (string, error) {
 }
 
 // Decrypt decrypts a GPG-encrypted file using a symmetric passphrase.
-func (e *Engine) Decrypt(filePath string, passphrase string) (string, error) {
+func (e *Engine) Decrypt(filePath, passphrase string) (string, error) {
 	decryptedPath := filePath[:len(filePath)-4] // remove .gpg
 	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--decrypt", "--output", decryptedPath, filePath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {

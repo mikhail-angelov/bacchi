@@ -1,12 +1,11 @@
 version: "2"
 run:
   go: "1.25"
-  timeout: 5m
-
 linters:
-  disable-all: true
+  default: none
   enable:
     - dupl
+    - errorlint
     - gochecknoinits
     - gocritic
     - gocyclo
@@ -15,60 +14,73 @@ linters:
     - ineffassign
     - misspell
     - nakedret
+    - nestif
     - prealloc
     - revive
     - staticcheck
+    - testifylint
     - unconvert
     - unparam
     - unused
-    - nestif
-    - testifylint
     - wrapcheck
-    - errorlint
-
-linters-settings:
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  gocritic:
-    disabled-checks:
-      - wrapperFunc
-      - hugeParam
-      - rangeValCopy
-      - singleCaseSwitch
-      - ifElseChain
-    enabled-tags:
-      - performance
-      - style
-      - experimental
-  govet:
-    enable:
-      - shadow
-  lll:
-    line-length: 140
-  misspell:
-    locale: US
-
-issues:
-  exclude-rules:
-    - linters:
-        - staticcheck
-      text: "at least one file in a package should have a package comment"
-    - linters:
-        - revive
-      text: "should have a comment"
-    - linters:
-        - dupl
-        - gosec
-      path: _test\.go
-    - linters:
-        - revive
-        - unparam
-        - unused
-      path: _test\.go$
-      text: "unused-parameter"
-  exclude-dirs:
-    - vendor
-    - third_party
-    - builtin
-    - examples
+  settings:
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      disabled-checks:
+        - wrapperFunc
+        - hugeParam
+        - rangeValCopy
+        - singleCaseSwitch
+        - ifElseChain
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - staticcheck
+        text: at least one file in a package should have a package comment
+      - linters:
+          - revive
+        text: should have a comment
+      - linters:
+          - dupl
+          - gosec
+        path: _test\.go
+      - linters:
+          - revive
+          - unparam
+          - unused
+        path: _test\.go$
+        text: unused-parameter
+    paths:
+      - vendor
+      - third_party
+      - builtin
+      - examples
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

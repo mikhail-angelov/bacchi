@@ -22,10 +22,11 @@ retention:
 	}
 	defer func() { _ = os.Remove(tmpfile.Name()) }()
 
-	if _, err := tmpfile.Write([]byte(content)); err != nil {
+	_, err = tmpfile.WriteString(content)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := tmpfile.Close(); err != nil {
+	if err = tmpfile.Close(); err != nil {
 		t.Fatal(err)
 	}
 
