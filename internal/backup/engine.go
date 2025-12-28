@@ -1,3 +1,4 @@
+// Package backup handles the creation and management of backup archives.
 package backup
 
 import (
@@ -33,11 +34,9 @@ func (e *Engine) CreateArchive(name string, folders []string, exclude []string, 
 		args = append(args, "--exclude", pattern)
 	}
 
-	for _, folder := range folders {
-		args = append(args, folder)
-	}
+	args = append(args, folders...)
 
-	cmd := exec.Command("tar", args...)
+	cmd := exec.Command("tar", args...) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("tar failed: %w, output: %s", err, string(output))
 	}
@@ -48,7 +47,7 @@ func (e *Engine) CreateArchive(name string, folders []string, exclude []string, 
 // Encrypt encrypts a file using GPG symmetric encryption with a passphrase.
 func (e *Engine) Encrypt(filePath string, passphrase string) (string, error) {
 	encryptedPath := filePath + ".gpg"
-	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--symmetric", "--output", encryptedPath, filePath)
+	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--symmetric", "--output", encryptedPath, filePath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("gpg encryption failed: %w, output: %s", err, string(output))
 	}
@@ -58,7 +57,7 @@ func (e *Engine) Encrypt(filePath string, passphrase string) (string, error) {
 // Decrypt decrypts a GPG-encrypted file using a symmetric passphrase.
 func (e *Engine) Decrypt(filePath string, passphrase string) (string, error) {
 	decryptedPath := filePath[:len(filePath)-4] // remove .gpg
-	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--decrypt", "--output", decryptedPath, filePath)
+	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--decrypt", "--output", decryptedPath, filePath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("gpg decryption failed: %w, output: %s", err, string(output))
 	}

@@ -1,8 +1,10 @@
+// Package config handles the application configuration.
 package config
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -40,7 +42,7 @@ type Config struct {
 
 // LoadConfig loads the configuration from a YAML file.
 func LoadConfig(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}

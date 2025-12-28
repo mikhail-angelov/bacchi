@@ -1,3 +1,4 @@
+// Package s3 provides a wrapper around the AWS S3 SDK.
 package s3
 
 import (
@@ -22,20 +23,9 @@ type Client struct {
 
 // NewClient creates a new S3 client with the given credentials and configuration.
 func NewClient(ctx context.Context, bucket, region, endpoint, accessKey, secretKey, prefix string) (*Client, error) {
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if endpoint != "" {
-			return aws.Endpoint{
-				URL:           endpoint,
-				SigningRegion: region,
-			}, nil
-		}
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	})
-
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
-		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load SDK config: %w", err)
@@ -44,6 +34,9 @@ func NewClient(ctx context.Context, bucket, region, endpoint, accessKey, secretK
 	return &Client{
 		client: s3.NewFromConfig(cfg, func(o *s3.Options) {
 			o.UsePathStyle = true
+			if endpoint != "" {
+				o.BaseEndpoint = aws.String(endpoint)
+			}
 		}),
 		bucket: bucket,
 		prefix: prefix,
@@ -52,11 +45,11 @@ func NewClient(ctx context.Context, bucket, region, endpoint, accessKey, secretK
 
 // UploadFile uploads a local file to S3.
 func (c *Client) UploadFile(ctx context.Context, filePath string) error {
-	file, err := os.Open(filePath)
+	file, err := os.Open(filePath) // #nosec G304
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	key := filepath.Join(c.prefix, filepath.Base(filePath))
 
@@ -109,11 +102,11 @@ func (c *Client) DeleteFile(ctx context.Context, key string) error {
 
 // DownloadFile downloads a file from S3 to a local target path.
 func (c *Client) DownloadFile(ctx context.Context, key, targetPath string) error {
-	file, err := os.Create(targetPath)
+	file, err := os.Create(targetPath) // #nosec G304
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	downloader := manager.NewDownloader(c.client)
 	_, err = downloader.Download(ctx, file, &s3.GetObjectInput{

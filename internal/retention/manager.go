@@ -1,3 +1,4 @@
+// Package retention manages the rotation and cleanup of old backups in S3.
 package retention
 
 import (

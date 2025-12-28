@@ -1,3 +1,4 @@
+// Package main is the entry point for the backup-service CLI.
 package main
 
 import (
@@ -37,7 +38,7 @@ func backupCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "backup",
 		Short: "Perform an immediate backup and rotate old ones",
-		Run: func(_ *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg, err := config.LoadConfig(cfgFile)
 			if err != nil {
 				log.Fatalf("failed to load config: %v", err)
@@ -56,7 +57,7 @@ func listCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List backups in S3",
-		Run: func(_ *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg, err := config.LoadConfig(cfgFile)
 			if err != nil {
 				log.Fatalf("failed to load config: %v", err)
@@ -118,20 +119,20 @@ func restoreCmd() *cobra.Command {
 				if err != nil {
 					log.Fatalf("failed to decrypt: %v", err)
 				}
-				os.Remove(tempPath)
+				_ = os.Remove(tempPath)
 				extractPath = decryptedPath
 			}
 
 			log.Printf("Extracting to %s...", targetDir)
-			if err := os.MkdirAll(targetDir, 0o755); err != nil {
+			if err := os.MkdirAll(targetDir, 0o750); err != nil {
 				log.Fatalf("failed to create target dir: %v", err)
 			}
 
-			untarCmd := exec.Command("tar", "-xzf", extractPath, "-C", targetDir)
+			untarCmd := exec.Command("tar", "-xzf", extractPath, "-C", targetDir) // #nosec G204
 			if output, err := untarCmd.CombinedOutput(); err != nil {
 				log.Fatalf("failed to extract: %v, output: %s", err, string(output))
 			}
-			os.Remove(extractPath)
+			_ = os.Remove(extractPath)
 
 			log.Println("Restore completed successfully")
 		},
@@ -164,21 +165,21 @@ func executeBackup(cfg *config.Config) error {
 			encryptedPath, err := engine.Encrypt(archivePath, cfg.Encryption.Passphrase)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("encryption of %s failed: %w", b.Name, err))
-				os.Remove(archivePath)
+				_ = os.Remove(archivePath)
 				continue
 			}
-			os.Remove(archivePath)
+			_ = os.Remove(archivePath)
 			uploadPath = encryptedPath
 		}
 
 		log.Printf("Uploading %s to S3...", uploadPath)
 		if err := s3Client.UploadFile(ctx, uploadPath); err != nil {
 			errs = append(errs, fmt.Errorf("upload %s failed: %w", b.Name, err))
-			os.Remove(uploadPath)
+			_ = os.Remove(uploadPath)
 			continue
 		}
 
-		os.Remove(uploadPath)
+		_ = os.Remove(uploadPath)
 	}
 
 	log.Println("Running retention rotation...")
@@ -192,9 +193,9 @@ func executeBackup(cfg *config.Config) error {
 			for _, e := range errs {
 				msg += fmt.Sprintf("- %v\n", e)
 			}
-			tgClient.SendMessage(msg)
+			_ = tgClient.SendMessage(msg)
 		} else {
-			tgClient.SendMessage("✅ Backup completed successfully")
+			_ = tgClient.SendMessage("✅ Backup completed successfully")
 		}
 	}
 
