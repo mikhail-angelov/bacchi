@@ -15,7 +15,7 @@
 # vendor/
 
 # Build artifacts
-#backup-service
+/backup-service
 backup-service-*
 
 # Local configuration
@@ -41,3 +41,6 @@ bin/
 
 .env
 config*.yaml
+
+# Temporary files
+tmp/*

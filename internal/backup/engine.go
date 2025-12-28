@@ -3,6 +3,7 @@ package backup
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
@@ -18,10 +19,19 @@ func NewEngine(tempDir string) *Engine {
 	return &Engine{TempDir: tempDir}
 }
 
-// CreateArchive creates a tar.gz archive of the specified folders, supporting incremental backups with GNU tar.
-func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotFile string) (string, error) {
+// CreateArchive creates a tar.gz archive of the specified folders, supporting full and incremental backups with GNU tar.
+// If isFull is true, it ignores/resets the snapshotFile to force a full backup.
+func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotFile string, isFull bool) (string, string, error) {
 	timestamp := time.Now().Format("20060102150405")
-	archiveName := fmt.Sprintf("%s_%s.tar.gz", name, timestamp)
+	backupType := "inc"
+	if isFull {
+		backupType = "full"
+		if snapshotFile != "" {
+			_ = os.Remove(snapshotFile)
+		}
+	}
+
+	archiveName := fmt.Sprintf("%s_%s.%s.tar.gz", name, timestamp, backupType)
 	archivePath := filepath.Join(e.TempDir, archiveName)
 
 	args := []string{"-czf", archivePath}
@@ -38,10 +48,10 @@ func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotF
 
 	cmd := exec.Command("tar", args...) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("tar failed: %w, output: %s", err, string(output))
+		return "", "", fmt.Errorf("tar failed: %w, output: %s", err, string(output))
 	}
 
-	return archivePath, nil
+	return archivePath, backupType, nil
 }
 
 // Encrypt encrypts a file using GPG symmetric encryption with a passphrase.

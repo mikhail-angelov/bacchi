@@ -1,2 +1,5 @@
-# Daily backup at midnight
+# Daily backup at midnight (automatic full/incremental)
 0 0 * * * /usr/local/bin/backup-service backup --config=/etc/backup-service/config.yaml >> /var/log/backup-service.log 2>&1
+
+# Explicit monthly full backup on the 1st of every month at 1:00 AM
+0 1 1 * * /usr/local/bin/backup-service backup --full --config=/etc/backup-service/config.yaml >> /var/log/backup-service.log 2>&1
