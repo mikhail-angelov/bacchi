@@ -179,17 +179,17 @@ func restoreCmd() *cobra.Command {
 	}
 }
 
-func getBackupNameAndTimestamp(key string) (string, string) {
+func getBackupNameAndTimestamp(key string) (name, timestamp string) {
 	base := filepath.Base(key)
 	parts := strings.Split(base, "_")
 	if len(parts) < 2 {
 		return "", ""
 	}
-	name := parts[0]
+	name = parts[0]
 	rest := parts[1]
 	tsParts := strings.Split(rest, ".")
-	timestamp := tsParts[0]
-	return name, timestamp
+	timestamp = tsParts[0]
+	return
 }
 
 func executeBackup(cfg *config.Config, forceFull bool) error {

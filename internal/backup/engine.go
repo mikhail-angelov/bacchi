@@ -21,9 +21,9 @@ func NewEngine(tempDir string) *Engine {
 
 // CreateArchive creates a tar.gz archive of the specified folders, supporting full and incremental backups with GNU tar.
 // If isFull is true, it ignores/resets the snapshotFile to force a full backup.
-func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotFile string, isFull bool) (string, string, error) {
+func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotFile string, isFull bool) (archivePath, backupType string, err error) {
 	timestamp := time.Now().Format("20060102150405")
-	backupType := "inc"
+	backupType = "inc"
 	if isFull {
 		backupType = "full"
 		if snapshotFile != "" {
@@ -32,7 +32,7 @@ func (e *Engine) CreateArchive(name string, folders, exclude []string, snapshotF
 	}
 
 	archiveName := fmt.Sprintf("%s_%s.%s.tar.gz", name, timestamp, backupType)
-	archivePath := filepath.Join(e.TempDir, archiveName)
+	archivePath = filepath.Join(e.TempDir, archiveName)
 
 	args := []string{"-czf", archivePath}
 
@@ -66,7 +66,7 @@ func (e *Engine) Encrypt(filePath, passphrase string) (string, error) {
 
 // Decrypt decrypts a GPG-encrypted file using a symmetric passphrase.
 func (e *Engine) Decrypt(filePath, passphrase string) (string, error) {
-	decryptedPath := filePath[:len(filePath)-4] // remove .gpg
+	decryptedPath := filePath[:len(filePath)-4]                                                                                  // remove .gpg
 	cmd := exec.Command("gpg", "--batch", "--yes", "--passphrase", passphrase, "--decrypt", "--output", decryptedPath, filePath) // #nosec G204
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("gpg decryption failed: %w, output: %s", err, string(output))
