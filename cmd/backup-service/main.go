@@ -14,6 +14,7 @@ import (
 
 	"github.com/mikhail-angelov/backup-service/internal/backup"
 	"github.com/mikhail-angelov/backup-service/internal/config"
+	"github.com/mikhail-angelov/backup-service/internal/email"
 	"github.com/mikhail-angelov/backup-service/internal/retention"
 	"github.com/mikhail-angelov/backup-service/internal/s3"
 	"github.com/mikhail-angelov/backup-service/internal/telegram"
@@ -207,6 +208,7 @@ func executeBackup(cfg *config.Config, forceFull bool) error {
 
 	retentionManager := retention.NewManager(s3Client, cfg.Retention.Daily, cfg.Retention.Monthly)
 	tgClient := telegram.NewClient(cfg.Telegram.BotToken, cfg.Telegram.ChatID)
+	emailClient := email.NewClient(cfg.Email.SMTPHost, cfg.Email.SMTPPort, cfg.Email.From, cfg.Email.Username, cfg.Email.Password, cfg.Email.To)
 
 	var errs []error
 	for _, b := range cfg.Backups {
@@ -263,15 +265,25 @@ func executeBackup(cfg *config.Config, forceFull bool) error {
 		errs = append(errs, fmt.Errorf("retention failed: %w", err))
 	}
 
-	if cfg.Telegram.Enabled {
-		if len(errs) > 0 {
-			msg := "❌ Backup Failed:\n"
-			for _, e := range errs {
-				msg += fmt.Sprintf("- %v\n", e)
-			}
+	// Send notifications
+	if len(errs) > 0 {
+		msg := "❌ Backup Failed:\n"
+		for _, e := range errs {
+			msg += fmt.Sprintf("- %v\n", e)
+		}
+		if cfg.Telegram.Enabled {
 			_ = tgClient.SendMessage(msg)
-		} else {
-			_ = tgClient.SendMessage("✅ Backup completed successfully")
+		}
+		if cfg.Email.Enabled {
+			_ = emailClient.SendMessage("Backup Failed", msg)
+		}
+	} else {
+		successMsg := "✅ Backup completed successfully"
+		if cfg.Telegram.Enabled {
+			_ = tgClient.SendMessage(successMsg)
+		}
+		if cfg.Email.Enabled {
+			_ = emailClient.SendMessage("Backup Completed Successfully", successMsg)
 		}
 	}
 

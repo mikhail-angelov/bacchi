@@ -37,6 +37,15 @@ type Config struct {
 		ChatID   string `yaml:"chat_id"`
 		Enabled  bool   `yaml:"enabled"`
 	} `yaml:"telegram"`
+	Email struct {
+		Enabled  bool     `yaml:"enabled"`
+		SMTPHost string   `yaml:"smtp_host"`
+		SMTPPort string   `yaml:"smtp_port"`
+		From     string   `yaml:"from"`
+		To       []string `yaml:"to"`
+		Username string   `yaml:"username"`
+		Password string   `yaml:"password"`
+	} `yaml:"email"`
 	Schedule string `yaml:"schedule"` // Cron format
 }
 
