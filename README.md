@@ -10,6 +10,7 @@ A robust, production-ready backup service written in Go. It performs smart full/
 - **Rotation Policy**: Keeps 10 daily and 1 monthly backup automatically.
 - **GPG Encryption**: 🔐 Symmetric encryption with a passphrase for secure storage.
 - **Telegram Notifications**: 🤖 Get status alerts directly in your Telegram chat (success/failure details).
+- **Email Notifications**: 📧 Send backup results via SMTP with STARTTLS support (port 587).
 - **Simple Deployment**: No complex daemon; runs via standard system `cron`.
 - **Remote Management**: A powerful `Makefile` for one-command deployment and remote control.
 
@@ -45,6 +46,16 @@ telegram:
   enabled: true
   bot_token: "..."
   chat_id: "..."
+
+email:
+  enabled: true
+  smtp_host: "smtp.example.com"
+  smtp_port: "587"
+  from: "no-reply@example.com"
+  to:
+    - "admin@example.com"
+  username: "..."
+  password: "..."
 ```
 
 ## Makefile Commands
