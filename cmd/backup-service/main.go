@@ -193,6 +193,17 @@ func getBackupNameAndTimestamp(key string) (name, timestamp string) {
 	return
 }
 
+func buildNotification(errs []error) (subject, msg string) {
+	if len(errs) == 0 {
+		return "Backup Completed Successfully", "✅ Backup completed successfully"
+	}
+	msg = "❌ Backup Failed:\n"
+	for _, e := range errs {
+		msg += fmt.Sprintf("- %v\n", e)
+	}
+	return "Backup Failed", msg
+}
+
 func executeBackup(cfg *config.Config, forceFull bool) error {
 	ctx := context.Background()
 	engine := backup.NewEngine(os.TempDir())
@@ -266,32 +277,15 @@ func executeBackup(cfg *config.Config, forceFull bool) error {
 	}
 
 	// Send notifications
-	if len(errs) > 0 {
-		msg := "❌ Backup Failed:\n"
-		for _, e := range errs {
-			msg += fmt.Sprintf("- %v\n", e)
+	subject, msg := buildNotification(errs)
+	if cfg.Telegram.Enabled {
+		if err := tgClient.SendMessage(msg); err != nil {
+			log.Printf("Warning: failed to send Telegram notification: %v", err)
 		}
-		if cfg.Telegram.Enabled {
-			if err := tgClient.SendMessage(msg); err != nil {
-				log.Printf("Warning: failed to send Telegram notification: %v", err)
-			}
-		}
-		if cfg.Email.Enabled {
-			if err := emailClient.SendMessage("Backup Failed", msg); err != nil {
-				log.Printf("Warning: failed to send email notification: %v", err)
-			}
-		}
-	} else {
-		successMsg := "✅ Backup completed successfully"
-		if cfg.Telegram.Enabled {
-			if err := tgClient.SendMessage(successMsg); err != nil {
-				log.Printf("Warning: failed to send Telegram notification: %v", err)
-			}
-		}
-		if cfg.Email.Enabled {
-			if err := emailClient.SendMessage("Backup Completed Successfully", successMsg); err != nil {
-				log.Printf("Warning: failed to send email notification: %v", err)
-			}
+	}
+	if cfg.Email.Enabled {
+		if err := emailClient.SendMessage(subject, msg); err != nil {
+			log.Printf("Warning: failed to send email notification: %v", err)
 		}
 	}
 

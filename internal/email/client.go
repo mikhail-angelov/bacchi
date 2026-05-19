@@ -93,5 +93,8 @@ func (c *Client) SendMessage(subject, body string) error {
 		return fmt.Errorf("end data: %w", err)
 	}
 
-	return client.Quit()
+	if err = client.Quit(); err != nil {
+		return fmt.Errorf("quit: %w", err)
+	}
+	return nil
 }
