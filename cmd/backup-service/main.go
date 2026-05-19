@@ -272,18 +272,26 @@ func executeBackup(cfg *config.Config, forceFull bool) error {
 			msg += fmt.Sprintf("- %v\n", e)
 		}
 		if cfg.Telegram.Enabled {
-			_ = tgClient.SendMessage(msg)
+			if err := tgClient.SendMessage(msg); err != nil {
+				log.Printf("Warning: failed to send Telegram notification: %v", err)
+			}
 		}
 		if cfg.Email.Enabled {
-			_ = emailClient.SendMessage("Backup Failed", msg)
+			if err := emailClient.SendMessage("Backup Failed", msg); err != nil {
+				log.Printf("Warning: failed to send email notification: %v", err)
+			}
 		}
 	} else {
 		successMsg := "✅ Backup completed successfully"
 		if cfg.Telegram.Enabled {
-			_ = tgClient.SendMessage(successMsg)
+			if err := tgClient.SendMessage(successMsg); err != nil {
+				log.Printf("Warning: failed to send Telegram notification: %v", err)
+			}
 		}
 		if cfg.Email.Enabled {
-			_ = emailClient.SendMessage("Backup Completed Successfully", successMsg)
+			if err := emailClient.SendMessage("Backup Completed Successfully", successMsg); err != nil {
+				log.Printf("Warning: failed to send email notification: %v", err)
+			}
 		}
 	}
 
